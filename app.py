@@ -20,19 +20,17 @@ from gevent.pywsgi import WSGIServer
 app = Flask(__name__)
 
 # Model saved with Keras model.save()
-MODEL_PATH = 'models/your_model.h5'
+MODEL_PATH = 'models/Cardiomegaly.h5'
 
 # Load your trained model
-model = load_model('models/Cardiomegaly.h5')
+model = load_model(MODEL_PATH)
 model._make_predict_function()          # Necessary
 print('Model loaded. Start serving...')
 
 # You can also use pretrained model from Keras
 # Check https://keras.io/applications/
 
-
 def model_predict(img_path, model):
-    print("in predict")
     img = image.load_img(img_path, target_size=(224, 224))
 
     # Preprocessing the image
@@ -44,9 +42,7 @@ def model_predict(img_path, model):
     # otherwise, it won't make correct prediction!
     x = preprocess_input(x, mode='caffe')
 
-    print("processed input")
     preds = model.predict(x)
-    print("predicted outcome")
     return preds
 
 
@@ -56,7 +52,7 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/pred', methods=['GET', 'POST'])
+@app.route('/predict', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
         # Get the file from post request
@@ -67,11 +63,11 @@ def upload():
         file_path = os.path.join(
             basepath, 'uploads', secure_filename(f.filename))
         f.save(file_path)
-        print("got file")
+
         # Make prediction
         preds = model_predict(file_path, model)
-        rounded = round(preds*100, 3)
-        return str(rounded)
+        result = round(preds[0][0] * 100, 3)
+        return ('Cardiomegaly: ' + str(result))
     return None
 
 
